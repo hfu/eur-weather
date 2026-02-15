@@ -1,9 +1,9 @@
-// Exchange rate API configuration
-const API_BASE = 'https://api.exchangerate-api.com/v4/latest';
-
 // Weather determination thresholds
 const THRESHOLD_SUNNY = 0.01; // +1% or more favorable
 const THRESHOLD_RAINY = -0.01; // -1% or worse
+
+// Cache duration in milliseconds (10 minutes)
+const CACHE_DURATION = 10 * 60 * 1000;
 
 // Weather icons and comments
 const WEATHER = {
@@ -41,7 +41,7 @@ function getComment(weatherType) {
 
 // Determine weather based on rate comparison
 function determineWeather(currentRate, avgRate) {
-  // For JPY and USD to EUR, higher rate means more EUR per unit, which is better
+  // Higher rate means more EUR received per unit of JPY/USD, which is favorable when converting to EUR
   const difference = (currentRate - avgRate) / avgRate;
   
   if (difference >= THRESHOLD_SUNNY) {
@@ -55,6 +55,9 @@ function determineWeather(currentRate, avgRate) {
 
 // Calculate average of rates
 function calculateAverage(rates) {
+  if (!Array.isArray(rates) || rates.length === 0) {
+    return 0;
+  }
   const sum = rates.reduce((acc, val) => acc + val, 0);
   return sum / rates.length;
 }
@@ -64,10 +67,8 @@ async function fetchHistoricalRates(baseCurrency, targetCurrency = 'EUR') {
   const rates = [];
   const today = new Date();
   
-  // For simplicity, we'll use the current rate as a proxy
-  // In a real app, you'd need a service that provides historical data
-  // Since exchangerate-api.com free tier doesn't provide historical data,
-  // we'll use a workaround with frankfurter.app which is free
+  // Fetch actual historical rates from frankfurter.app
+  // which provides free historical exchange rate data for the last 30 days
   
   try {
     const endDate = today.toISOString().split('T')[0];
@@ -85,9 +86,23 @@ async function fetchHistoricalRates(baseCurrency, targetCurrency = 'EUR') {
     
     const data = await response.json();
     
+    // Validate response structure before accessing rates
+    if (!data || typeof data !== 'object' || !data.rates || typeof data.rates !== 'object') {
+      console.error('Unexpected historical rates response structure:', data);
+      return rates;
+    }
+    
     // Extract rates from the response
     for (const date in data.rates) {
-      rates.push(data.rates[date][targetCurrency]);
+      const dayRates = data.rates[date];
+      if (!dayRates || typeof dayRates !== 'object') {
+        continue;
+      }
+      const rateForDay = dayRates[targetCurrency];
+      if (typeof rateForDay !== 'number') {
+        continue;
+      }
+      rates.push(rateForDay);
     }
     
     return rates;
@@ -117,12 +132,74 @@ async function fetchCurrentRate(baseCurrency, targetCurrency = 'EUR') {
   }
 }
 
+// Cache helper functions
+function getCachedData(key) {
+  try {
+    const cached = localStorage.getItem(key);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    const now = Date.now();
+    
+    // Check if cache is still valid
+    if (now - timestamp < CACHE_DURATION) {
+      return data;
+    }
+    
+    // Cache expired, remove it
+    localStorage.removeItem(key);
+    return null;
+  } catch (error) {
+    console.error('Error reading cache:', error);
+    return null;
+  }
+}
+
+function setCachedData(key, data) {
+  try {
+    const cacheEntry = {
+      data,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(key, JSON.stringify(cacheEntry));
+  } catch (error) {
+    console.error('Error writing cache:', error);
+  }
+}
+
+// Fetch with caching
+async function fetchWithCache(cacheKey, fetchFunction) {
+  // Try to get from cache first
+  const cached = getCachedData(cacheKey);
+  if (cached !== null) {
+    console.log(`Using cached data for ${cacheKey}`);
+    return cached;
+  }
+  
+  // Fetch fresh data
+  const data = await fetchFunction();
+  
+  // Cache the result
+  setCachedData(cacheKey, data);
+  
+  return data;
+}
+
 // Update UI for a currency pair
 function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   const icon = document.getElementById(`${prefix}-icon`);
   const rateEl = document.getElementById(`${prefix}-rate`);
   const diffEl = document.getElementById(`${prefix}-diff`);
   const commentEl = document.getElementById(`${prefix}-comment`);
+  
+  // Guard against missing DOM elements to avoid runtime errors
+  if (!icon || !rateEl || !diffEl || !commentEl) {
+    console.warn(
+      `Missing DOM element(s) for prefix "${prefix}".`,
+      { icon, rateEl, diffEl, commentEl }
+    );
+    return;
+  }
   
   icon.textContent = WEATHER[weatherType].icon;
   rateEl.textContent = rate.toFixed(4);
@@ -150,17 +227,23 @@ async function initApp() {
   const updateTimeEl = document.getElementById('update-time');
   
   try {
-    // Fetch data for both currency pairs
+    // Fetch data for both currency pairs with caching
     const [jpyRate, jpyHistorical, usdRate, usdHistorical] = await Promise.all([
-      fetchCurrentRate('JPY'),
-      fetchHistoricalRates('JPY'),
-      fetchCurrentRate('USD'),
-      fetchHistoricalRates('USD')
+      fetchWithCache('jpy-current', () => fetchCurrentRate('JPY')),
+      fetchWithCache('jpy-historical', () => fetchHistoricalRates('JPY')),
+      fetchWithCache('usd-current', () => fetchCurrentRate('USD')),
+      fetchWithCache('usd-historical', () => fetchHistoricalRates('USD'))
     ]);
     
+    // Use current rate as fallback if historical data is unavailable or empty
+    const jpyHistoricalForAvg =
+      Array.isArray(jpyHistorical) && jpyHistorical.length > 0 ? jpyHistorical : [jpyRate];
+    const usdHistoricalForAvg =
+      Array.isArray(usdHistorical) && usdHistorical.length > 0 ? usdHistorical : [usdRate];
+    
     // Calculate averages
-    const jpyAvg = calculateAverage(jpyHistorical);
-    const usdAvg = calculateAverage(usdHistorical);
+    const jpyAvg = calculateAverage(jpyHistoricalForAvg);
+    const usdAvg = calculateAverage(usdHistoricalForAvg);
     
     // Determine weather
     const jpyWeather = determineWeather(jpyRate, jpyAvg);
