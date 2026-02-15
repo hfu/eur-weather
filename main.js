@@ -208,7 +208,8 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   const displayRate = prefix === 'jpy' ? 1 / rate : rate;
   const displayAvgRate = prefix === 'jpy' ? 1 / avgRate : avgRate;
   
-  rateEl.textContent = displayRate.toFixed(4);
+  // Use 2 decimal places for JPY (e.g., 182.00) and 4 for other currencies
+  rateEl.textContent = displayRate.toFixed(prefix === 'jpy' ? 2 : 4);
   
   const difference = displayRate - displayAvgRate;
   const percentDiff = ((difference / displayAvgRate) * 100).toFixed(2);
