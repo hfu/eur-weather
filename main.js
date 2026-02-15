@@ -202,18 +202,37 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   }
   
   icon.textContent = WEATHER[weatherType].icon;
-  rateEl.textContent = rate.toFixed(4);
   
-  const difference = rate - avgRate;
-  const percentDiff = ((difference / avgRate) * 100).toFixed(2);
-  const sign = difference >= 0 ? '+' : '';
+  // For JPY, display inverted rate (EUR/JPY instead of JPY/EUR)
+  // to show how many JPY per 1 EUR, which is more familiar to users
+  // Guard against division by zero
+  const displayRate = prefix === 'jpy' && rate !== 0 ? 1 / rate : rate;
   
-  diffEl.textContent = `${sign}${percentDiff}%`;
-  diffEl.classList.remove('positive', 'negative');
-  if (difference > 0) {
-    diffEl.classList.add('positive');
-  } else if (difference < 0) {
-    diffEl.classList.add('negative');
+  // Add currency pair symbols for clarity
+  // Note: Currently supports only 'jpy' and 'usd' prefixes
+  const currencySymbol = prefix === 'jpy' ? ' [💴/💶]' : ' [💶/💵]';
+  
+  // Use 2 decimal places for JPY (e.g., 182.00) and 4 for other currencies
+  rateEl.textContent = displayRate.toFixed(prefix === 'jpy' ? 2 : 4) + currencySymbol;
+  
+  // Calculate percentage difference using RAW rates to match weather determination logic
+  // This ensures consistency: favorable weather = positive %, unfavorable = negative %
+  // Guard against division by zero in percentage calculation
+  if (avgRate === 0) {
+    diffEl.textContent = 'N/A';
+    diffEl.classList.remove('positive', 'negative');
+  } else {
+    const difference = rate - avgRate;
+    const percentDiff = ((difference / avgRate) * 100).toFixed(2);
+    const sign = difference >= 0 ? '+' : '';
+    
+    diffEl.textContent = `${sign}${percentDiff}%`;
+    diffEl.classList.remove('positive', 'negative');
+    if (difference > 0) {
+      diffEl.classList.add('positive');
+    } else if (difference < 0) {
+      diffEl.classList.add('negative');
+    }
   }
   
   commentEl.textContent = getComment(weatherType);
