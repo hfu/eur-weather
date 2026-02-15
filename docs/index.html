@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EUR Weather - 為替ナッジ</title>
+  <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const t of document.querySelectorAll('link[rel="modulepreload"]'))s(t);new MutationObserver(t=>{for(const r of t)if(r.type==="childList")for(const c of r.addedNodes)c.tagName==="LINK"&&c.rel==="modulepreload"&&s(c)}).observe(document,{childList:!0,subtree:!0});function n(t){const r={};return t.integrity&&(r.integrity=t.integrity),t.referrerPolicy&&(r.referrerPolicy=t.referrerPolicy),t.crossOrigin==="use-credentials"?r.credentials="include":t.crossOrigin==="anonymous"?r.credentials="omit":r.credentials="same-origin",r}function s(t){if(t.ep)return;t.ep=!0;const r=n(t);fetch(t.href,r)}})();const w=.01,L=-.01,g={sunny:{icon:"☀️",comments:["良いタイミングです。今日は替え時かもしれません。","平均より有利なレートです。検討してみては？","今日のレートは好調です。チャンスかも。"]},cloudy:{icon:"⛅",comments:["平均的なレートです。急ぎでなければ様子見も。","標準的な水準です。焦らず判断しましょう。","平均的なタイミングです。落ち着いて検討を。"]},rainy:{icon:"🌧️",comments:["平均より不利なレートです。待つのも一つの手。","今日は様子見がよいかもしれません。","少し待ってみるのもありかもしれません。"]}};function S(o){const e=g[o].comments;return e[Math.floor(Math.random()*e.length)]}function u(o,e){const n=(o-e)/e;return n>=w?"sunny":n<=L?"rainy":"cloudy"}function f(o){return o.reduce((n,s)=>n+s,0)/o.length}async function m(o,e="EUR"){const n=[],s=new Date;try{const t=s.toISOString().split("T")[0],r=new Date(s);r.setDate(r.getDate()-30);const c=r.toISOString().split("T")[0],a=await fetch(`https://api.frankfurter.app/${c}..${t}?from=${o}&to=${e}`);if(!a.ok)throw new Error("Failed to fetch historical data");const i=await a.json();for(const l in i.rates)n.push(i.rates[l][e]);return n}catch(t){return console.error("Error fetching historical rates:",t),[]}}async function p(o,e="EUR"){try{const n=await fetch(`https://api.frankfurter.app/latest?from=${o}&to=${e}`);if(!n.ok)throw new Error("Failed to fetch current rate");return(await n.json()).rates[e]}catch(n){throw console.error("Error fetching current rate:",n),n}}function y(o,e,n,s){const t=document.getElementById(`${o}-icon`),r=document.getElementById(`${o}-rate`),c=document.getElementById(`${o}-diff`),a=document.getElementById(`${o}-comment`);t.textContent=g[s].icon,r.textContent=e.toFixed(4);const i=e-n,l=(i/n*100).toFixed(2),d=i>=0?"+":"";c.textContent=`${d}${l}%`,c.classList.remove("positive","negative"),i>0?c.classList.add("positive"):i<0&&c.classList.add("negative"),a.textContent=S(s)}async function h(){const o=document.getElementById("loading"),e=document.getElementById("error"),n=document.getElementById("content"),s=document.getElementById("update-time");try{const[t,r,c,a]=await Promise.all([p("JPY"),m("JPY"),p("USD"),m("USD")]),i=f(r),l=f(a),d=u(t,i),E=u(c,l);y("jpy",t,i,d),y("usd",c,l,E),o.style.display="none",n.style.display="block";const D=new Date;s.textContent=`更新: ${D.toLocaleString("ja-JP")}`}catch(t){console.error("Error initializing app:",t),o.style.display="none",e.style.display="block"}}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",h):h();</script>
+  <style rel="stylesheet" crossorigin>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;color:#333}.container{max-width:800px;margin:0 auto}header{text-align:center;color:#fff;margin-bottom:40px}header h1{font-size:2.5rem;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.2)}.subtitle{font-size:1.1rem;opacity:.9}main{margin-bottom:40px}.loading,.error{background:#fff;padding:40px;border-radius:15px;text-align:center;box-shadow:0 10px 30px #0003}.error{background:#fee;color:#c00}.currency-card{background:#fff;border-radius:15px;padding:30px;margin-bottom:20px;box-shadow:0 10px 30px #0003;transition:transform .3s ease}.currency-card:hover{transform:translateY(-5px)}.currency-card h2{font-size:1.5rem;margin-bottom:20px;color:#667eea}.weather-display{display:flex;align-items:center;gap:30px;margin-bottom:20px}.weather-icon{font-size:4rem;min-width:80px;text-align:center}.rate-info{flex:1}.current-rate,.avg-diff{margin-bottom:10px}.label{font-size:.9rem;color:#666;margin-right:10px}.value{font-size:1.2rem;font-weight:700;color:#333}.avg-diff .value{font-size:1rem}.avg-diff .value.positive{color:#28a745}.avg-diff .value.negative{color:#dc3545}.comment{background:#f8f9fa;padding:15px;border-radius:10px;font-size:.95rem;color:#555;border-left:4px solid #667eea;font-style:italic}footer{text-align:center;color:#fff}.note{font-size:.85rem;margin-bottom:10px;opacity:.8}.update-time{font-size:.8rem;opacity:.7}@media (max-width: 600px){header h1{font-size:2rem}.weather-display{flex-direction:column;gap:15px}.currency-card{padding:20px}}</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌍 EUR Weather</h1>
+      <p class="subtitle">今日の為替タイミング</p>
+    </header>
+    
+    <main>
+      <div id="loading" class="loading">
+        <p>データを読み込み中...</p>
+      </div>
+      
+      <div id="error" class="error" style="display: none;">
+        <p>データの取得に失敗しました</p>
+      </div>
+      
+      <div id="content" style="display: none;">
+        <div class="currency-card">
+          <h2>🇯🇵 JPY → EUR</h2>
+          <div class="weather-display">
+            <div class="weather-icon" id="jpy-icon">-</div>
+            <div class="rate-info">
+              <div class="current-rate">
+                <span class="label">今日のレート:</span>
+                <span class="value" id="jpy-rate">-</span>
+              </div>
+              <div class="avg-diff">
+                <span class="label">30日平均との差:</span>
+                <span class="value" id="jpy-diff">-</span>
+              </div>
+            </div>
+          </div>
+          <p class="comment" id="jpy-comment">-</p>
+        </div>
+        
+        <div class="currency-card">
+          <h2>🇺🇸 USD → EUR</h2>
+          <div class="weather-display">
+            <div class="weather-icon" id="usd-icon">-</div>
+            <div class="rate-info">
+              <div class="current-rate">
+                <span class="label">今日のレート:</span>
+                <span class="value" id="usd-rate">-</span>
+              </div>
+              <div class="avg-diff">
+                <span class="label">30日平均との差:</span>
+                <span class="value" id="usd-diff">-</span>
+              </div>
+            </div>
+          </div>
+          <p class="comment" id="usd-comment">-</p>
+        </div>
+      </div>
+    </main>
+    
+    <footer>
+      <p class="note">※ データは参考用です。実際の取引レートとは異なる場合があります。</p>
+      <p class="update-time" id="update-time"></p>
+    </footer>
+  </div>
+  
+</body>
+</html>

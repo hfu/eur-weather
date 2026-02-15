@@ -1,0 +1,15 @@
+{
+  "name": "eur-weather",
+  "version": "1.0.0",
+  "description": "Currency exchange rate nudge app with weather theme",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "vite-plugin-singlefile": "^2.0.0"
+  }
+}

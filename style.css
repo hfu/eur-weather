@@ -1,0 +1,159 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #333;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  color: white;
+  margin-bottom: 40px;
+}
+
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+main {
+  margin-bottom: 40px;
+}
+
+.loading,
+.error {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.error {
+  background: #fee;
+  color: #c00;
+}
+
+.currency-card {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.currency-card:hover {
+  transform: translateY(-5px);
+}
+
+.currency-card h2 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #667eea;
+}
+
+.weather-display {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.weather-icon {
+  font-size: 4rem;
+  min-width: 80px;
+  text-align: center;
+}
+
+.rate-info {
+  flex: 1;
+}
+
+.current-rate,
+.avg-diff {
+  margin-bottom: 10px;
+}
+
+.label {
+  font-size: 0.9rem;
+  color: #666;
+  margin-right: 10px;
+}
+
+.value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.avg-diff .value {
+  font-size: 1rem;
+}
+
+.avg-diff .value.positive {
+  color: #28a745;
+}
+
+.avg-diff .value.negative {
+  color: #dc3545;
+}
+
+.comment {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  color: #555;
+  border-left: 4px solid #667eea;
+  font-style: italic;
+}
+
+footer {
+  text-align: center;
+  color: white;
+}
+
+.note {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+.update-time {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 2rem;
+  }
+  
+  .weather-display {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .currency-card {
+    padding: 20px;
+  }
+}
