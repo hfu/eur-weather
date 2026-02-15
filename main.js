@@ -202,10 +202,16 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   }
   
   icon.textContent = WEATHER[weatherType].icon;
-  rateEl.textContent = rate.toFixed(4);
   
-  const difference = rate - avgRate;
-  const percentDiff = ((difference / avgRate) * 100).toFixed(2);
+  // For JPY, display inverted rate (EUR/JPY instead of JPY/EUR)
+  // to show how many JPY per 1 EUR, which is more familiar to users
+  const displayRate = prefix === 'jpy' ? 1 / rate : rate;
+  const displayAvgRate = prefix === 'jpy' ? 1 / avgRate : avgRate;
+  
+  rateEl.textContent = displayRate.toFixed(4);
+  
+  const difference = displayRate - displayAvgRate;
+  const percentDiff = ((difference / displayAvgRate) * 100).toFixed(2);
   const sign = difference >= 0 ? '+' : '';
   
   diffEl.textContent = `${sign}${percentDiff}%`;
