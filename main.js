@@ -209,6 +209,7 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   const displayRate = prefix === 'jpy' && rate !== 0 ? 1 / rate : rate;
   
   // Add currency pair symbols for clarity
+  // Note: Currently supports only 'jpy' and 'usd' prefixes
   const currencySymbol = prefix === 'jpy' ? ' [💴/💶]' : ' [💶/💵]';
   
   // Use 2 decimal places for JPY (e.g., 182.00) and 4 for other currencies
@@ -216,16 +217,22 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   
   // Calculate percentage difference using RAW rates to match weather determination logic
   // This ensures consistency: favorable weather = positive %, unfavorable = negative %
-  const difference = rate - avgRate;
-  const percentDiff = ((difference / avgRate) * 100).toFixed(2);
-  const sign = difference >= 0 ? '+' : '';
-  
-  diffEl.textContent = `${sign}${percentDiff}%`;
-  diffEl.classList.remove('positive', 'negative');
-  if (difference > 0) {
-    diffEl.classList.add('positive');
-  } else if (difference < 0) {
-    diffEl.classList.add('negative');
+  // Guard against division by zero in percentage calculation
+  if (avgRate === 0) {
+    diffEl.textContent = 'N/A';
+    diffEl.classList.remove('positive', 'negative');
+  } else {
+    const difference = rate - avgRate;
+    const percentDiff = ((difference / avgRate) * 100).toFixed(2);
+    const sign = difference >= 0 ? '+' : '';
+    
+    diffEl.textContent = `${sign}${percentDiff}%`;
+    diffEl.classList.remove('positive', 'negative');
+    if (difference > 0) {
+      diffEl.classList.add('positive');
+    } else if (difference < 0) {
+      diffEl.classList.add('negative');
+    }
   }
   
   commentEl.textContent = getComment(weatherType);
