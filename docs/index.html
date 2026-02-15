@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EUR Weather - 為替ナッジ</title>
+  <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const o of document.querySelectorAll('link[rel="modulepreload"]'))c(o);new MutationObserver(o=>{for(const r of o)if(r.type==="childList")for(const s of r.addedNodes)s.tagName==="LINK"&&s.rel==="modulepreload"&&c(s)}).observe(document,{childList:!0,subtree:!0});function n(o){const r={};return o.integrity&&(r.integrity=o.integrity),o.referrerPolicy&&(r.referrerPolicy=o.referrerPolicy),o.crossOrigin==="use-credentials"?r.credentials="include":o.crossOrigin==="anonymous"?r.credentials="omit":r.credentials="same-origin",r}function c(o){if(o.ep)return;o.ep=!0;const r=n(o);fetch(o.href,r)}})();const I=.01,O=-.01,$=10*60*1e3,D={sunny:{icon:"☀️",comments:["良いタイミングです。今日は替え時かもしれません。","平均より有利なレートです。検討してみては？","今日のレートは好調です。チャンスかも。"]},cloudy:{icon:"⛅",comments:["平均的なレートです。急ぎでなければ様子見も。","標準的な水準です。焦らず判断しましょう。","平均的なタイミングです。落ち着いて検討を。"]},rainy:{icon:"🌧️",comments:["平均より不利なレートです。待つのも一つの手。","今日は様子見がよいかもしれません。","少し待ってみるのもありかもしれません。"]}};function j(t){const e=D[t].comments;return e[Math.floor(Math.random()*e.length)]}function m(t,e){const n=(t-e)/e;return n>=I?"sunny":n<=O?"rainy":"cloudy"}function y(t){return!Array.isArray(t)||t.length===0?0:t.reduce((n,c)=>n+c,0)/t.length}async function p(t,e="EUR"){const n=[],c=new Date;try{const o=c.toISOString().split("T")[0],r=new Date(c);r.setDate(r.getDate()-30);const s=r.toISOString().split("T")[0],i=await fetch(`https://api.frankfurter.app/${s}..${o}?from=${t}&to=${e}`);if(!i.ok)throw new Error("Failed to fetch historical data");const a=await i.json();if(!a||typeof a!="object"||!a.rates||typeof a.rates!="object")return console.error("Unexpected historical rates response structure:",a),n;for(const d in a.rates){const l=a.rates[d];if(!l||typeof l!="object")continue;const u=l[e];typeof u=="number"&&n.push(u)}return n}catch(o){return console.error("Error fetching historical rates:",o),[]}}async function h(t,e="EUR"){try{const n=await fetch(`https://api.frankfurter.app/latest?from=${t}&to=${e}`);if(!n.ok)throw new Error("Failed to fetch current rate");return(await n.json()).rates[e]}catch(n){throw console.error("Error fetching current rate:",n),n}}function L(t){try{const e=localStorage.getItem(t);if(!e)return null;const{data:n,timestamp:c}=JSON.parse(e);return Date.now()-c<$?n:(localStorage.removeItem(t),null)}catch(e){return console.error("Error reading cache:",e),null}}function v(t,e){try{const n={data:e,timestamp:Date.now()};localStorage.setItem(t,JSON.stringify(n))}catch(n){console.error("Error writing cache:",n)}}async function f(t,e){const n=L(t);if(n!==null)return console.log(`Using cached data for ${t}`),n;const c=await e();return v(t,c),c}function g(t,e,n,c){const o=document.getElementById(`${t}-icon`),r=document.getElementById(`${t}-rate`),s=document.getElementById(`${t}-diff`),i=document.getElementById(`${t}-comment`);if(!o||!r||!s||!i){console.warn(`Missing DOM element(s) for prefix "${t}".`,{icon:o,rateEl:r,diffEl:s,commentEl:i});return}o.textContent=D[c].icon,r.textContent=e.toFixed(4);const a=e-n,d=(a/n*100).toFixed(2),l=a>=0?"+":"";s.textContent=`${l}${d}%`,s.classList.remove("positive","negative"),a>0?s.classList.add("positive"):a<0&&s.classList.add("negative"),i.textContent=j(c)}async function E(){const t=document.getElementById("loading"),e=document.getElementById("error"),n=document.getElementById("content"),c=document.getElementById("update-time");try{const[o,r,s,i]=await Promise.all([f("jpy-current",()=>h("JPY")),f("jpy-historical",()=>p("JPY")),f("usd-current",()=>h("USD")),f("usd-historical",()=>p("USD"))]),a=Array.isArray(r)&&r.length>0?r:[o],d=Array.isArray(i)&&i.length>0?i:[s],l=y(a),u=y(d),w=m(o,l),S=m(s,u);g("jpy",o,l,w),g("usd",s,u,S),t.style.display="none",n.style.display="block";const A=new Date;c.textContent=`更新: ${A.toLocaleString("ja-JP")}`}catch(o){console.error("Error initializing app:",o),t.style.display="none",e.style.display="block"}}document.readyState==="loading"?document.addEventListener("DOMContentLoaded",E):E();</script>
+  <style rel="stylesheet" crossorigin>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;padding:20px;color:#333}.container{max-width:800px;margin:0 auto}header{text-align:center;color:#fff;margin-bottom:40px}header h1{font-size:2.5rem;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.2)}.subtitle{font-size:1.1rem;opacity:.9}main{margin-bottom:40px}.loading,.error{background:#fff;padding:40px;border-radius:15px;text-align:center;box-shadow:0 10px 30px #0003}.error{background:#fee;color:#c00}.currency-card{background:#fff;border-radius:15px;padding:30px;margin-bottom:20px;box-shadow:0 10px 30px #0003;transition:transform .3s ease}.currency-card:hover{transform:translateY(-5px)}.currency-card h2{font-size:1.5rem;margin-bottom:20px;color:#667eea}.weather-display{display:flex;align-items:center;gap:30px;margin-bottom:20px}.weather-icon{font-size:4rem;min-width:80px;text-align:center}.rate-info{flex:1}.current-rate,.avg-diff{margin-bottom:10px}.label{font-size:.9rem;color:#666;margin-right:10px}.value{font-size:1.2rem;font-weight:700;color:#333}.avg-diff .value{font-size:1rem}.avg-diff .value.positive{color:#28a745}.avg-diff .value.negative{color:#dc3545}.comment{background:#f8f9fa;padding:15px;border-radius:10px;font-size:.95rem;color:#555;border-left:4px solid #667eea;font-style:italic}footer{text-align:center;color:#fff}.note{font-size:.85rem;margin-bottom:10px;opacity:.8}.update-time{font-size:.8rem;opacity:.7}.disclaimer{font-size:.7rem;margin-top:10px;opacity:.6;line-height:1.4}@media (max-width: 600px){header h1{font-size:2rem}.weather-display{flex-direction:column;gap:15px}.currency-card{padding:20px}}</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌍 EUR Weather</h1>
+      <p class="subtitle">今日の為替タイミング</p>
+    </header>
+    
+    <main>
+      <div id="loading" class="loading">
+        <p>データを読み込み中...</p>
+      </div>
+      
+      <div id="error" class="error" style="display: none;" aria-live="polite">
+        <p>データの取得に失敗しました</p>
+      </div>
+      
+      <div id="content" style="display: none;" aria-live="polite">
+        <div class="currency-card">
+          <h2>🇯🇵 JPY → EUR</h2>
+          <div class="weather-display">
+            <div class="weather-icon" id="jpy-icon">-</div>
+            <div class="rate-info">
+              <div class="current-rate">
+                <span class="label">今日のレート:</span>
+                <span class="value" id="jpy-rate">-</span>
+              </div>
+              <div class="avg-diff">
+                <span class="label">30日平均との差:</span>
+                <span class="value" id="jpy-diff">-</span>
+              </div>
+            </div>
+          </div>
+          <p class="comment" id="jpy-comment">-</p>
+        </div>
+        
+        <div class="currency-card">
+          <h2>🇺🇸 USD → EUR</h2>
+          <div class="weather-display">
+            <div class="weather-icon" id="usd-icon">-</div>
+            <div class="rate-info">
+              <div class="current-rate">
+                <span class="label">今日のレート:</span>
+                <span class="value" id="usd-rate">-</span>
+              </div>
+              <div class="avg-diff">
+                <span class="label">30日平均との差:</span>
+                <span class="value" id="usd-diff">-</span>
+              </div>
+            </div>
+          </div>
+          <p class="comment" id="usd-comment">-</p>
+        </div>
+      </div>
+    </main>
+    
+    <footer>
+      <p class="note">※ データは参考用です。実際の取引レートとは異なる場合があります。</p>
+      <p class="update-time" id="update-time"></p>
+      <p class="disclaimer">本サービスは無保証で提供されており、為替取引による損失について一切の責任を負いません。投資判断は自己責任で行ってください。</p>
+    </footer>
+  </div>
+  
+</body>
+</html>
