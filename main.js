@@ -205,14 +205,19 @@ function updateCurrencyDisplay(prefix, rate, avgRate, weatherType) {
   
   // For JPY, display inverted rate (EUR/JPY instead of JPY/EUR)
   // to show how many JPY per 1 EUR, which is more familiar to users
-  const displayRate = prefix === 'jpy' ? 1 / rate : rate;
-  const displayAvgRate = prefix === 'jpy' ? 1 / avgRate : avgRate;
+  // Guard against division by zero
+  const displayRate = prefix === 'jpy' && rate !== 0 ? 1 / rate : rate;
+  
+  // Add currency pair symbols for clarity
+  const currencySymbol = prefix === 'jpy' ? ' [💴/💶]' : ' [💶/💵]';
   
   // Use 2 decimal places for JPY (e.g., 182.00) and 4 for other currencies
-  rateEl.textContent = displayRate.toFixed(prefix === 'jpy' ? 2 : 4);
+  rateEl.textContent = displayRate.toFixed(prefix === 'jpy' ? 2 : 4) + currencySymbol;
   
-  const difference = displayRate - displayAvgRate;
-  const percentDiff = ((difference / displayAvgRate) * 100).toFixed(2);
+  // Calculate percentage difference using RAW rates to match weather determination logic
+  // This ensures consistency: favorable weather = positive %, unfavorable = negative %
+  const difference = rate - avgRate;
+  const percentDiff = ((difference / avgRate) * 100).toFixed(2);
   const sign = difference >= 0 ? '+' : '';
   
   diffEl.textContent = `${sign}${percentDiff}%`;
